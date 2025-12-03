@@ -1,0 +1,16 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build
+bin/
+obj/
+
+# .NET
+*.dll
+*.pdb
+
+# Angular
+node_modules/
+dist/

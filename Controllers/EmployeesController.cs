@@ -1,0 +1,66 @@
+﻿using EmployeeManagement.Api.Attributes;
+using EmployeeManagement.Api.DTOs;
+using EmployeeManagement.Api.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace EmployeeManagement.Api.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class EmployeesController : ControllerBase
+    {
+        private readonly IEmployeeService _service;
+
+        public EmployeesController(IEmployeeService service)
+        {
+            _service = service;
+        }
+        [Authorize]
+        [RequirePermission("employee.view")]
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var list = await _service.GetAll();
+            return Ok(list);
+        }
+        [Authorize]
+        [RequirePermission("employee.view")]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(long id)
+        {
+            var emp = await _service.GetById(id);
+            if (emp == null) return NotFound();
+
+            return Ok(emp);
+        }
+        [Authorize]
+        [RequirePermission("employee.create")]
+        [HttpPost]
+        public async Task<IActionResult> Create(CreateEmployeeDto dto)
+        {
+            var emp = await _service.Create(dto);
+            return Ok(emp);
+        }
+        [Authorize]
+        [RequirePermission("employee.edit")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(long id, UpdateEmployeeDto dto)
+        {
+            var updated = await _service.Update(id, dto);
+            if (!updated) return NotFound();
+
+            return Ok(new {message = "updated"});
+        }
+        [Authorize]
+        [RequirePermission("employee.delete")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var deleted = await _service.Delete(id);
+            if (!deleted) return NotFound();
+
+            return Ok(new { message = "deleted" });
+        }
+    }
+}
