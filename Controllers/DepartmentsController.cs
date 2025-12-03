@@ -33,7 +33,18 @@ public class DepartmentsController : ControllerBase
     [RequirePermission("department.create")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateDepartmentDto dto)
-        => Ok(await _service.Create(dto));
+    {
+        try
+        {
+            var dept = await _service.Create(dto);
+            return Ok(dept);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
 
     [Authorize]
     [RequirePermission("department.edit")]

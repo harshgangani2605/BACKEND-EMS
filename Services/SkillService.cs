@@ -41,6 +41,11 @@ namespace EmployeeManagement.Api.Services
 
         public async Task<SkillDto> Create(CreateSkillDto dto)
         {
+            bool nameExists = await _context.Skills
+                    .AnyAsync(x => x.Name == dto.Name);
+
+            if (nameExists)
+                throw new Exception("Skill name already exists");
             var skill = new Skill
             {
                 Name = dto.Name,

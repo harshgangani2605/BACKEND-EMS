@@ -41,6 +41,11 @@ namespace EmployeeManagement.Api.Services
 
         public async Task<DepartmentDto> Create(CreateDepartmentDto dto)
         {
+            bool nameExists = await _context.Departments
+                            .AnyAsync(x => x.Name == dto.Name);
+
+            if (nameExists)
+                throw new Exception("Department name already exists");
             var dept = new Department
             {
                 Name = dto.Name,

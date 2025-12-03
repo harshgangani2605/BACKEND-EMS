@@ -1,4 +1,5 @@
-﻿using EmployeeManagement.Api.DTOs;
+﻿using EmployeeManagement.Api.Data;
+using EmployeeManagement.Api.DTOs;
 using EmployeeManagement.Api.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -7,15 +8,18 @@ namespace EmployeeManagement.Api.Services
 {
     public class AuthService
     {
+        private readonly AppDbContext _context;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly JwtService _jwtService;
 
         public AuthService(
+            AppDbContext context,
             UserManager<AppUser> userManager,
             RoleManager<AppRole> roleManager,
             JwtService jwtService)
         {
+            _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _jwtService = jwtService;
@@ -54,11 +58,17 @@ namespace EmployeeManagement.Api.Services
         // ================================================================
         public async Task<string?> Login(LoginDto dto)
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user == null) return null;
+            // CASE-SENSITIVE EMAIL CHECK
+            var user = await _context.Users
+                .FirstOrDefaultAsync(x => EF.Functions.Collate(x.Email,"SQL_Latin1_General_CP1_CS_AS") == dto.Email);
 
+            if (user == null)
+                return null;
+
+            // Password is already case-sensitive
             bool valid = await _userManager.CheckPasswordAsync(user, dto.Password);
-            if (!valid) return null;
+            if (!valid)
+                return null;
 
             var roles = await _userManager.GetRolesAsync(user);
             return _jwtService.GenerateToken(user, roles);

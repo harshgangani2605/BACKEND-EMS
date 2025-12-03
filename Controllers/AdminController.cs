@@ -70,7 +70,7 @@ namespace EmployeeManagement.Api.Controllers
         {
             var exists = await _userManager.FindByEmailAsync(dto.Email);
             if (exists != null)
-                return BadRequest("User already exists");
+                return BadRequest(new { message = "User already exists" });
 
             var user = new AppUser
             {

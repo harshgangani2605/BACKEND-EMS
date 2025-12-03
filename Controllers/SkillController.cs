@@ -39,8 +39,15 @@ namespace EmployeeManagement.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateSkillDto dto)
         {
-            var created = await _service.Create(dto);
-            return Ok(created);
+            try
+            {
+                var created = await _service.Create(dto);
+                return Ok(created);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [RequirePermission("skill.edit")]

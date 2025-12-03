@@ -56,7 +56,7 @@ namespace EmployeeManagement.Api.Controllers
         public async Task<IActionResult> CreateRole(CreateRoleDto dto)
         {
             if (await _roleManager.RoleExistsAsync(dto.Name))
-                return BadRequest("Role already exists");
+                return BadRequest(new { message = "Role already exists" });
 
             var role = new AppRole { Name = dto.Name };
             await _roleManager.CreateAsync(role);
