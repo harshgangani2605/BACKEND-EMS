@@ -126,7 +126,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMS API v1");
+
+        c.RoutePrefix = string.Empty;   // 👈 IMPORTANT — OPEN SWAGGER AT ROOT URL
+    }); 
 }
 
 app.UseHttpsRedirection();

@@ -36,11 +36,12 @@ namespace EmployeeManagement.Api.Controllers
 
             return Ok(skill);
         }
-    
+
         [RequirePermission("skill.create")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateSkillDto dto)
         {
+
             try
             {
                 var created = await _service.Create(dto);
@@ -51,6 +52,7 @@ namespace EmployeeManagement.Api.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
 
         [RequirePermission("skill.edit")]
         [HttpPut("{id}")]
