@@ -2,7 +2,6 @@
 using EmployeeManagement.Api.DTOs;
 using EmployeeManagement.Api.Entities;
 using EmployeeManagement.Api.Interfaces;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagement.Api.Services
@@ -30,15 +29,16 @@ namespace EmployeeManagement.Api.Services
                     Email = e.Email,
                     Salary = e.Salary,
                     JoinedOn = e.JoinedOn,
-
-                    DepartmentId = e.DepartmentId,       // ✔ FIXED
+                    DepartmentId = e.DepartmentId,
                     DepartmentName = e.Department.Name,
-
                     SkillIds = e.EmployeeSkills.Select(s => s.SkillId).ToList(),
                     Skills = e.EmployeeSkills.Select(s => s.Skill.Name).ToList()
                 })
                 .ToListAsync();
         }
+
+        // ---------------------- PAGINATION + SEARCH ----------------------
+       
 
         // ---------------------- GET BY ID ----------------------
         public async Task<EmployeeDto?> GetById(long id)
@@ -58,11 +58,9 @@ namespace EmployeeManagement.Api.Services
                 Email = e.Email,
                 Salary = e.Salary,
                 JoinedOn = e.JoinedOn,
-
-                DepartmentId = e.DepartmentId,   // ✔ FIXED
+                DepartmentId = e.DepartmentId,
                 DepartmentName = e.Department.Name,
-
-                SkillIds = e.EmployeeSkills.Select(x => x.SkillId).ToList(),   // ✔ FIXED
+                SkillIds = e.EmployeeSkills.Select(x => x.SkillId).ToList(),
                 Skills = e.EmployeeSkills.Select(x => x.Skill.Name).ToList()
             };
         }
@@ -70,28 +68,12 @@ namespace EmployeeManagement.Api.Services
         // ---------------------- CREATE ----------------------
         public async Task<EmployeeDto> Create(CreateEmployeeDto dto)
         {
-            // ====================================================
-            // 1. CHECK UNIQUE EMAIL
-            // ====================================================
-            bool emailExists = await _context.Employees
-                .AnyAsync(x => x.Email == dto.Email);
-
-            if (emailExists)
+            if (await _context.Employees.AnyAsync(x => x.Email == dto.Email))
                 throw new Exception("Email already exists");
 
-            // ====================================================
-            // 2. CHECK UNIQUE NAME
-            // ====================================================
-            bool nameExists = await _context.Employees
-                .AnyAsync(x => x.FullName == dto.FullName);
-
-            if (nameExists)
+            if (await _context.Employees.AnyAsync(x => x.FullName == dto.FullName))
                 throw new Exception("Employee name already exists");
 
-
-            // ====================================================
-            // 3. CREATE EMPLOYEE
-            // ====================================================
             var emp = new Employee
             {
                 FullName = dto.FullName,
@@ -105,10 +87,6 @@ namespace EmployeeManagement.Api.Services
             _context.Employees.Add(emp);
             await _context.SaveChangesAsync();
 
-
-            // ====================================================
-            // 4. SAVE SKILLS
-            // ====================================================
             foreach (var skillId in dto.SkillIds)
             {
                 _context.EmployeeSkills.Add(new EmployeeSkill
@@ -120,13 +98,8 @@ namespace EmployeeManagement.Api.Services
 
             await _context.SaveChangesAsync();
 
-
-            // ====================================================
-            // 5. RETURN FULL EMPLOYEE DTO
-            // ====================================================
             return await GetById(emp.Id);
         }
-
 
         // ---------------------- UPDATE ----------------------
         public async Task<bool> Update(long id, UpdateEmployeeDto dto)
@@ -175,5 +148,7 @@ namespace EmployeeManagement.Api.Services
 
             return true;
         }
+
+        
     }
 }

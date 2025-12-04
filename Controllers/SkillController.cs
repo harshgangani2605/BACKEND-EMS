@@ -13,6 +13,7 @@ namespace EmployeeManagement.Api.Controllers
     {
         private readonly ISkillService _service;
 
+
         public SkillsController(ISkillService service)
         {
             _service = service;
@@ -20,9 +21,10 @@ namespace EmployeeManagement.Api.Controllers
       
         [RequirePermission("skill.view")]
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10, string? search = null)
         {
-            return Ok(await _service.GetAll());
+            var result = await _service.GetPaged(page, pageSize, search);
+            return Ok(result);
         }
 
         [RequirePermission("skill.view")]

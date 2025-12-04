@@ -35,18 +35,49 @@ namespace EmployeeManagement.Api.Controllers
         }
 
         // ------------------------------------------------------
-        // GET ALL ROLES (UI LIST)
+        // GET PAGED ROLES (UI LIST)
         // ------------------------------------------------------
         [RequirePermission("role.view")]
-        [HttpGet]
-        public IActionResult GetRoles()
+        [HttpGet("paged")]
+        public async Task<IActionResult> GetPaged(
+            int page = 1,
+            int pageSize = 10,
+            string? search = null)
         {
-            var roles = _roleManager.Roles
-                .Select(r => new { r.Id, r.Name })
+            var query = _roleManager.Roles.AsQueryable();
+
+            // SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.ToLower();
+                query = query.Where(r => r.Name!.ToLower().Contains(s));
+            }
+
+            // COUNT
+            var totalItems = query.Count();
+
+            // PAGINATION
+            var items = query
+                .OrderBy(r => r.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Name
+                })
                 .ToList();
 
-            return Ok(roles);
+            return Ok(new
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                Items = items
+            });
         }
+
 
         // ------------------------------------------------------
         // CREATE NEW ROLE

@@ -102,5 +102,6 @@ namespace EmployeeManagement.Api.Services
                 Roles = new List<string> { dto.Role }
             };
         }
+
     }
 }

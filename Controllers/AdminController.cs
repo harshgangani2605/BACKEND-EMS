@@ -4,12 +4,13 @@ using EmployeeManagement.Api.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagement.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] 
+    [Authorize]
     public class AdminController : ControllerBase
     {
         private readonly UserManager<AppUser> _userManager;
@@ -23,25 +24,49 @@ namespace EmployeeManagement.Api.Controllers
 
         [RequirePermission("user.view")]
         [HttpGet("users")]
-        public async Task<IActionResult> GetUsers()
+        public async Task<PagedResult<UserDto>> GetUsersPaged(int page = 1, int pageSize = 10, string? search = null)
         {
-            var users = _userManager.Users.ToList();
+            var query = _userManager.Users.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.ToLower();
+                query = query.Where(u =>
+                    u.Email!.ToLower().Contains(s) ||
+                    u.FullName!.ToLower().Contains(s));
+            }
+
+            var totalItems = await query.CountAsync();
+
+            var users = await query
+                .OrderBy(u => u.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
             var result = new List<UserDto>();
 
-            foreach (var user in users)
+            foreach (var u in users)
             {
-                var roles = await _userManager.GetRolesAsync(user);
+                var roles = await _userManager.GetRolesAsync(u);
 
                 result.Add(new UserDto
                 {
-                    Id = user.Id,
-                    Email = user.Email!,
-                    FullName = user.FullName ?? "",
+                    Id = u.Id,
+                    Email = u.Email!,
+                    FullName = u.FullName ?? "",
                     Roles = roles.ToList()
                 });
             }
 
-            return Ok(result);
+            return new PagedResult<UserDto>
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                Items = result
+            };
         }
         [RequirePermission("user.view")]
         [HttpGet("user")]

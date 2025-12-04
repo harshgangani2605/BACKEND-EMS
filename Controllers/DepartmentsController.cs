@@ -14,11 +14,16 @@ public class DepartmentsController : ControllerBase
     {
         _service = service;
     }
+    
     [Authorize]
     [RequirePermission("department.view")]
     [HttpGet]
-    public async Task<IActionResult> GetAll()
-        => Ok(await _service.GetAll());
+    public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10, string? search = null)
+    {
+        var result = await _service.GetPaged(page, pageSize, search);
+        return Ok(result);
+    }
+
     [Authorize]
     [RequirePermission("department.view")]
     [HttpGet("{id}")]

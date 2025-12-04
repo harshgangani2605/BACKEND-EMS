@@ -25,7 +25,41 @@ namespace EmployeeManagement.Api.Services
                 })
                 .ToListAsync();
         }
+        public async Task<Interfaces.PagedResult<SkillDto>> GetPaged(int page, int pageSize, string? search)
+        {
+            var query = _context.Skills.AsQueryable();
 
+            // SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.ToLower();
+                query = query.Where(x => x.Name.ToLower().Contains(s));
+            }
+
+            // COUNT
+            var totalItems = await query.CountAsync();
+
+            // PAGING
+            var items = await query
+                .OrderBy(x => x.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new SkillDto
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                })
+                .ToListAsync();
+
+            return new Interfaces.PagedResult<SkillDto>
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                Items = items
+            };
+        }
 
         public async Task<SkillDto?> GetById(long id)
         {

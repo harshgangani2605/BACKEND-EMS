@@ -1,8 +1,10 @@
 ﻿using EmployeeManagement.Api.Attributes;
+using EmployeeManagement.Api.Data;
 using EmployeeManagement.Api.DTOs;
 using EmployeeManagement.Api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagement.Api.Controllers
 {
@@ -11,18 +13,65 @@ namespace EmployeeManagement.Api.Controllers
     public class EmployeesController : ControllerBase
     {
         private readonly IEmployeeService _service;
+        private readonly AppDbContext _context;
 
-        public EmployeesController(IEmployeeService service)
+        public EmployeesController(IEmployeeService service,AppDbContext context)
         {
+            _context = context;
             _service = service;
         }
         [Authorize]
         [RequirePermission("employee.view")]
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(int page = 1,
+        int pageSize = 10,
+        string? search = null)
+
         {
-            var list = await _service.GetAll();
-            return Ok(list);
+            var query = _context.Employees
+              .Include(e => e.Department)
+              .Include(e => e.EmployeeSkills)
+                  .ThenInclude(es => es.Skill)
+              .AsQueryable();
+
+            // SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.ToLower();
+                query = query.Where(e =>
+                    e.FullName.ToLower().Contains(s) ||
+                    e.Email.ToLower().Contains(s));
+            }
+
+            // COUNT
+            var totalItems = await query.CountAsync();
+
+            // PAGINATION
+            var items = await query
+                .OrderBy(e => e.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(e => new EmployeeDto
+                {
+                    Id = e.Id,
+                    FullName = e.FullName,
+                    Email = e.Email,
+                    Salary = e.Salary,
+                    JoinedOn = e.JoinedOn,
+                    DepartmentId = e.DepartmentId,
+                    DepartmentName = e.Department.Name,
+                    SkillIds = e.EmployeeSkills.Select(x => x.SkillId).ToList(),
+                    Skills = e.EmployeeSkills.Select(x => x.Skill.Name).ToList()
+                })
+                .ToListAsync();
+            return Ok(
+                new {
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalItems = totalItems,
+                    Items = items
+                }
+                );
         }
         [Authorize]
         [RequirePermission("employee.view")]
