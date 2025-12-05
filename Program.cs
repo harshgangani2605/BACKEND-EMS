@@ -11,6 +11,10 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+// Optional: bind explicit URL so logs show the expected address (useful in dev)
+builder.WebHost.UseUrls("http://localhost:5093");
+
 // ------------------------------
 // DATABASE
 // ------------------------------
@@ -125,6 +129,7 @@ var app = builder.Build();
 // ------------------------------
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
@@ -138,8 +143,14 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
 
 app.UseAuthentication();
-app.UseMiddleware<PermissionMiddleware>();
 app.UseAuthorization();
+app.UseMiddleware<PermissionMiddleware>();
+
+app.MapControllers();
+
+await CreateDefaultAdmin(app);
+
+app.Run();
 
 
 
@@ -246,8 +257,3 @@ async Task CreateDefaultAdmin(WebApplication app)
 
 
 // ------------------------------
-app.MapControllers();
-
-await CreateDefaultAdmin(app);
-
-app.Run();
