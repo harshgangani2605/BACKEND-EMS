@@ -34,6 +34,18 @@ namespace EmployeeManagement.Api.Controllers
                   .ThenInclude(es => es.Skill)
               .AsQueryable();
 
+            if(!IsAdmin())
+            {
+                var currentUser = GetCurrentUsername();
+                if (currentUser != null)
+                {
+                    query = query.Where(e => e.CreatedBy == currentUser);
+                }
+                else { 
+                    return Forbid();
+                }
+            }
+
             // SEARCH
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -111,5 +123,32 @@ namespace EmployeeManagement.Api.Controllers
 
             return Ok(new { message = "deleted" });
         }
+        private string? GetCurrentUsername()
+        {
+            if (User?.Identity?.IsAuthenticated != true) return null;
+
+            if (!string.IsNullOrEmpty(User.Identity?.Name))
+                return User.Identity.Name;
+
+            // common claim names
+            return User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                   ?? User.FindFirst("name")?.Value
+                   ?? User.FindFirst("preferred_username")?.Value
+                   ?? User.FindFirst("username")?.Value;
+        }
+
+        private bool IsAdmin()
+        {
+            if (User == null) return false;
+
+            // common role checks
+            if (User.IsInRole("Admin")) return true;
+
+            var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value)
+                        .Concat(User.FindAll("role").Select(c => c.Value));
+
+            return roles.Any(r => string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase));
+        }
+
     }
 }
