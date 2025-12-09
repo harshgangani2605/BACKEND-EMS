@@ -12,5 +12,6 @@
         public string DepartmentName { get; set; } = null!;
         public List<long> SkillIds { get; set; } = new();
         public List<string> Skills { get; set; } = new();
+        public string? CreatedBy { get; set; }
     }
 }

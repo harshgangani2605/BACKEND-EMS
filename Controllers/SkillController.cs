@@ -23,7 +23,7 @@ namespace EmployeeManagement.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10, string? search = null)
         {
-            var result = await _service.GetPaged(page, pageSize, search);
+            var result = await _service.GetPaged(page, pageSize, search, User);
             return Ok(result);
         }
 
@@ -44,7 +44,8 @@ namespace EmployeeManagement.Api.Controllers
 
             try
             {
-                var created = await _service.Create(dto);
+                string username = User.Identity.Name;
+                var created = await _service.Create(dto, username);
                 return Ok(created);
             }
             catch (Exception ex)
@@ -68,10 +69,18 @@ namespace EmployeeManagement.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)
         {
-            var result = await _service.Delete(id);
-            if (!result) return NotFound();
 
-            return Ok(new { message = "Deleted successfully" });
+            try
+            {
+                var result = await _service.Delete(id);
+                if (!result) return NotFound();
+
+                return Ok(new { message = "Deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

@@ -32,7 +32,9 @@ namespace EmployeeManagement.Api.Services
                     DepartmentId = e.DepartmentId,
                     DepartmentName = e.Department.Name,
                     SkillIds = e.EmployeeSkills.Select(s => s.SkillId).ToList(),
-                    Skills = e.EmployeeSkills.Select(s => s.Skill.Name).ToList()
+                    Skills = e.EmployeeSkills.Select(s => s.Skill.Name).ToList(),
+                    CreatedBy = e.CreatedBy,
+
                 })
                 .ToListAsync();
         }
@@ -66,7 +68,7 @@ namespace EmployeeManagement.Api.Services
         }
 
         // ---------------------- CREATE ----------------------
-        public async Task<EmployeeDto> Create(CreateEmployeeDto dto)
+        public async Task<EmployeeDto> Create(CreateEmployeeDto dto, string u)
         {
             if (await _context.Employees.AnyAsync(x => x.Email == dto.Email))
                 throw new Exception("Email already exists");
@@ -81,7 +83,7 @@ namespace EmployeeManagement.Api.Services
                 Salary = dto.Salary,
                 JoinedOn = dto.JoinedOn,
                 DepartmentId = dto.DepartmentId,
-                CreatedBy = "system"
+                CreatedBy = u
             };
 
             _context.Employees.Add(emp);

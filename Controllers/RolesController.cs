@@ -106,11 +106,16 @@ namespace EmployeeManagement.Api.Controllers
             if (role == null)
                 return NotFound("Role not found");
 
-            // Prevent deleting system Admin
+            // prevent deleting System Admin
             if (role.Name == "Admin")
                 return BadRequest("Cannot delete Admin role");
 
-            // Remove RolePermissions first (FK constraint)
+            // 🛑 Check if role is assigned to any user
+            var usersInRole = await _db.UserRoles.AnyAsync(ur => ur.RoleId == id);
+            if (usersInRole)
+                return BadRequest("This role is assigned to user(s). Remove/change user role first.");
+
+            // delete role-permission mappings
             var maps = _db.RolePermissions.Where(r => r.RoleId == id);
             _db.RolePermissions.RemoveRange(maps);
             await _db.SaveChangesAsync();
@@ -121,6 +126,7 @@ namespace EmployeeManagement.Api.Controllers
 
             return Ok(new { message = "Role deleted successfully" });
         }
+
 
         // ------------------------------------------------------
         // GET ALL PERMISSIONS (UI checkbox list)

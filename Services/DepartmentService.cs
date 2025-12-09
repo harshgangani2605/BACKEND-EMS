@@ -1,8 +1,9 @@
 ﻿using EmployeeManagement.Api.Data;
-using EmployeeManagement.Api.Entities;
 using EmployeeManagement.Api.DTOs;
-using Microsoft.EntityFrameworkCore;
+using EmployeeManagement.Api.Entities;
 using EmployeeManagement.Api.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EmployeeManagement.Api.Services
 {
@@ -18,9 +19,14 @@ namespace EmployeeManagement.Api.Services
         // ------------------------------------------------------
         // PAGINATION + SEARCH (NEW - REQUIRED)
         // ------------------------------------------------------
-        public async Task<Interfaces.PagedResult<DepartmentDto>> GetPaged(int page, int pageSize, string? search)
+        public async Task<Interfaces.PagedResult<DepartmentDto>> GetPaged(int page, int pageSize, string? search, ClaimsPrincipal user)
         {
             var query = _context.Departments.AsQueryable();
+            if (!user.IsInRole("Admin"))
+            {
+                var currentUser = user.Identity?.Name;
+                query = query.Where(x => x.CreatedBy == currentUser);
+            }
 
             // SEARCH
             if (!string.IsNullOrWhiteSpace(search))
@@ -40,7 +46,8 @@ namespace EmployeeManagement.Api.Services
                 .Select(d => new DepartmentDto
                 {
                     Id = d.Id,
-                    Name = d.Name
+                    Name = d.Name,
+                    CreatedBy = user.IsInRole("Admin") ? d.CreatedBy : null
                 })
                 .ToListAsync();
 
@@ -86,7 +93,7 @@ namespace EmployeeManagement.Api.Services
         // ------------------------------------------------------
         // CREATE
         // ------------------------------------------------------
-        public async Task<DepartmentDto> Create(CreateDepartmentDto dto)
+        public async Task<DepartmentDto> Create(CreateDepartmentDto dto, string u)
         {
             bool nameExists = await _context.Departments
                 .AnyAsync(x => x.Name == dto.Name);
@@ -97,8 +104,9 @@ namespace EmployeeManagement.Api.Services
             var dept = new Department
             {
                 Name = dto.Name,
-                CreatedBy = "system"
+                CreatedBy = u
             };
+
 
             _context.Departments.Add(dept);
             await _context.SaveChangesAsync();
@@ -132,7 +140,11 @@ namespace EmployeeManagement.Api.Services
         {
             var dept = await _context.Departments.FindAsync(id);
             if (dept == null) return false;
-
+            var inUse = await _context.Employees.AnyAsync(e => e.DepartmentId == id);
+            if (inUse)
+            {
+                throw new Exception("Department cannot be deleted because employees are using it.");
+            }
             _context.Departments.Remove(dept);
             await _context.SaveChangesAsync();
 

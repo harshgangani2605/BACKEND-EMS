@@ -73,7 +73,9 @@ namespace EmployeeManagement.Api.Controllers
                     DepartmentId = e.DepartmentId,
                     DepartmentName = e.Department.Name,
                     SkillIds = e.EmployeeSkills.Select(x => x.SkillId).ToList(),
-                    Skills = e.EmployeeSkills.Select(x => x.Skill.Name).ToList()
+                    Skills = e.EmployeeSkills.Select(x => x.Skill.Name).ToList(),
+                    CreatedBy = IsAdmin() ? e.CreatedBy : null
+
                 })
                 .ToListAsync();
             return Ok(
@@ -100,7 +102,8 @@ namespace EmployeeManagement.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateEmployeeDto dto)
         {
-            var emp = await _service.Create(dto);
+            string username = User.Identity.Name;
+            var emp = await _service.Create(dto, username);
             return Ok(emp);
         }
         [Authorize]

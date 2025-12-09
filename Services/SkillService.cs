@@ -3,6 +3,7 @@ using EmployeeManagement.Api.DTOs;
 using EmployeeManagement.Api.Entities;
 using EmployeeManagement.Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EmployeeManagement.Api.Services
 {
@@ -25,10 +26,14 @@ namespace EmployeeManagement.Api.Services
                 })
                 .ToListAsync();
         }
-        public async Task<Interfaces.PagedResult<SkillDto>> GetPaged(int page, int pageSize, string? search)
+        public async Task<Interfaces.PagedResult<SkillDto>> GetPaged(int page, int pageSize, string? search, ClaimsPrincipal user)
         {
             var query = _context.Skills.AsQueryable();
-
+            if (!user.IsInRole("Admin"))
+            {
+                var currentUser = user.Identity?.Name;
+                query = query.Where(x => x.CreatedBy == currentUser);
+            }
             // SEARCH
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -47,7 +52,8 @@ namespace EmployeeManagement.Api.Services
                 .Select(x => new SkillDto
                 {
                     Id = x.Id,
-                    Name = x.Name
+                    Name = x.Name,
+                    CreatedBy = user.IsInRole("Admin") ? x.CreatedBy : null   
                 })
                 .ToListAsync();
 
@@ -73,7 +79,7 @@ namespace EmployeeManagement.Api.Services
             };
         }
 
-        public async Task<SkillDto> Create(CreateSkillDto dto)
+        public async Task<SkillDto> Create(CreateSkillDto dto, string u)
         {
             bool nameExists = await _context.Skills
                     .AnyAsync(x => x.Name == dto.Name);
@@ -83,7 +89,7 @@ namespace EmployeeManagement.Api.Services
             var skill = new Skill
             {
                 Name = dto.Name,
-                CreatedBy = "system"
+                CreatedBy = u
             };
 
             _context.Skills.Add(skill);
@@ -114,10 +120,18 @@ namespace EmployeeManagement.Api.Services
             var skill = await _context.Skills.FindAsync(id);
             if (skill == null) return false;
 
+            // ❗ Check if skill is used by any employee
+            bool inUse = await _context.EmployeeSkills
+                             .AnyAsync(x => x.SkillId == id);
+
+            if (inUse)
+                throw new Exception("This skill is assigned to employee(s). Remove or update employee first.");
+
             _context.Skills.Remove(skill);
             await _context.SaveChangesAsync();
 
             return true;
         }
+
     }
 }

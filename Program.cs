@@ -131,12 +131,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMS API v1");
-
-        c.RoutePrefix = string.Empty;   // 👈 IMPORTANT — OPEN SWAGGER AT ROOT URL
-    }); 
+    app.UseSwaggerUI(); 
 }
 
 app.UseHttpsRedirection();
@@ -179,7 +174,7 @@ async Task CreateDefaultAdmin(WebApplication app)
     {
         adminUser = new AppUser
         {
-            FullName = "System Admin",
+            FullName = "Admin",
             Email = adminEmail,
             UserName = adminEmail
         };
@@ -194,7 +189,7 @@ async Task CreateDefaultAdmin(WebApplication app)
     // 3️⃣ Create Permissions
     var permissionList = new string[]
     {
-        "employee.view", "employee.create", "employee.edit", "employee.delete",
+        "admin","employee.view", "employee.create", "employee.edit", "employee.delete",
         "department.view", "department.create", "department.edit", "department.delete",
         "skill.view", "skill.create", "skill.edit", "skill.delete",
         "user.view", "user.create", "user.edit", "user.delete",
@@ -209,7 +204,7 @@ async Task CreateDefaultAdmin(WebApplication app)
             {
                 Name = perm,
                 Description = perm,
-                CreatedBy = "system"
+                CreatedBy = "Admin"
             });
         }
     }
@@ -231,7 +226,7 @@ async Task CreateDefaultAdmin(WebApplication app)
             {
                 RoleId = adminRole.Id,
                 PermissionId = p.Id,
-                CreatedBy = "system"
+                CreatedBy = "Admin"
             });
         }
 

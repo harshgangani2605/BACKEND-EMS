@@ -20,7 +20,7 @@ public class DepartmentsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10, string? search = null)
     {
-        var result = await _service.GetPaged(page, pageSize, search);
+        var result = await _service.GetPaged(page, pageSize, search, User);
         return Ok(result);
     }
 
@@ -41,7 +41,8 @@ public class DepartmentsController : ControllerBase
     {
         try
         {
-            var dept = await _service.Create(dto);
+            string username = User.Identity.Name;
+            var dept = await _service.Create(dto, username);
             return Ok(dept);
         }
         catch (Exception ex)

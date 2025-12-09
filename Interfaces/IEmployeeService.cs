@@ -7,7 +7,7 @@ namespace EmployeeManagement.Api.Interfaces
         Task<List<EmployeeDto>> GetAll();
         Task<EmployeeDto?> GetById(long id);
 
-        Task<EmployeeDto> Create(CreateEmployeeDto dto);
+        Task<EmployeeDto> Create(CreateEmployeeDto dto, string username);
         Task<bool> Update(long id, UpdateEmployeeDto dto);
         Task<bool> Delete(long id);
         

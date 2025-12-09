@@ -8,7 +8,7 @@ namespace EmployeeManagement.Api.Entities
         public long Id { get; set; }
 
         // FIX: remove "required" and set default
-        public string CreatedBy { get; set; } = "System";
+        public string CreatedBy { get; set; } = "Admin";
 
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
