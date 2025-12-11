@@ -103,7 +103,7 @@ namespace EmployeeManagement.Api.Controllers
         public async Task<IActionResult> Create(CreateEmployeeDto dto)
         {
             string username = User.Identity.Name;
-            var emp = await _service.Create(dto, username);
+            var emp = await _service.Create(dto, username,User);
             return Ok(emp);
         }
         [Authorize]

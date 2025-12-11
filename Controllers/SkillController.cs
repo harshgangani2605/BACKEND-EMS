@@ -45,7 +45,7 @@ namespace EmployeeManagement.Api.Controllers
             try
             {
                 string username = User.Identity.Name;
-                var created = await _service.Create(dto, username);
+                var created = await _service.Create(dto, username, User);
                 return Ok(created);
             }
             catch (Exception ex)

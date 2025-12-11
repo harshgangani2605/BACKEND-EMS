@@ -93,12 +93,23 @@ namespace EmployeeManagement.Api.Services
         // ------------------------------------------------------
         // CREATE
         // ------------------------------------------------------
-        public async Task<DepartmentDto> Create(CreateDepartmentDto dto, string u)
+        public async Task<DepartmentDto> Create(CreateDepartmentDto dto, string u, ClaimsPrincipal user)
         {
-            bool nameExists = await _context.Departments
-                .AnyAsync(x => x.Name == dto.Name);
+            bool nameExists;
 
-            if (nameExists)
+            if (!user.IsInRole("Admin"))
+            {
+                nameExists = await _context.Departments
+                .AnyAsync(x => x.Name == dto.Name && x.CreatedBy == u);
+
+            }
+            else
+            {
+                nameExists = await _context.Departments
+               .AnyAsync(x => x.Name == dto.Name);
+            }
+
+                if (nameExists)
                 throw new Exception("Department name already exists");
 
             var dept = new Department

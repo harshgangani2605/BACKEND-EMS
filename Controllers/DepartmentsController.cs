@@ -42,7 +42,7 @@ public class DepartmentsController : ControllerBase
         try
         {
             string username = User.Identity.Name;
-            var dept = await _service.Create(dto, username);
+            var dept = await _service.Create(dto, username, User);
             return Ok(dept);
         }
         catch (Exception ex)

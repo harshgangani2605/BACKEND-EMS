@@ -1,6 +1,6 @@
 ﻿namespace EmployeeManagement.Api.Entities
 {
-    public class RolePermission: BaseEntity
+    public class RolePermission
     {
         public long RoleId { get; set; }
         public AppRole? Role { get; set; }

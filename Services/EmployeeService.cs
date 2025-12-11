@@ -3,6 +3,7 @@ using EmployeeManagement.Api.DTOs;
 using EmployeeManagement.Api.Entities;
 using EmployeeManagement.Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace EmployeeManagement.Api.Services
 {
@@ -68,13 +69,24 @@ namespace EmployeeManagement.Api.Services
         }
 
         // ---------------------- CREATE ----------------------
-        public async Task<EmployeeDto> Create(CreateEmployeeDto dto, string u)
+        public async Task<EmployeeDto> Create(CreateEmployeeDto dto, string u, ClaimsPrincipal user)
         {
-            if (await _context.Employees.AnyAsync(x => x.Email == dto.Email))
+            bool nameExists;
+         
+
+            if(!user.IsInRole("Admin"))
+            {
+                nameExists = await _context.Employees.AnyAsync(x => x.Email == dto.Email && x.CreatedBy== u);
+                
+            }
+            else {
+                nameExists = await _context.Employees.AnyAsync(x => x.Email == dto.Email);
+                
+            }
+            if (nameExists)
                 throw new Exception("Email already exists");
 
-            if (await _context.Employees.AnyAsync(x => x.FullName == dto.FullName))
-                throw new Exception("Employee name already exists");
+   
 
             var emp = new Employee
             {
@@ -106,6 +118,7 @@ namespace EmployeeManagement.Api.Services
         // ---------------------- UPDATE ----------------------
         public async Task<bool> Update(long id, UpdateEmployeeDto dto)
         {
+
             var emp = await _context.Employees
                 .Include(x => x.EmployeeSkills)
                 .FirstOrDefaultAsync(x => x.Id == id);

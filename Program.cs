@@ -84,7 +84,6 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<RolePermissionService>();
-
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -226,7 +225,7 @@ async Task CreateDefaultAdmin(WebApplication app)
             {
                 RoleId = adminRole.Id,
                 PermissionId = p.Id,
-                CreatedBy = "Admin"
+               
             });
         }
 

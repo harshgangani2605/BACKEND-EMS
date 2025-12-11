@@ -1,4 +1,5 @@
 ﻿using EmployeeManagement.Api.DTOs;
+using System.Security.Claims;
 
 namespace EmployeeManagement.Api.Interfaces
 {
@@ -7,7 +8,7 @@ namespace EmployeeManagement.Api.Interfaces
         Task<List<EmployeeDto>> GetAll();
         Task<EmployeeDto?> GetById(long id);
 
-        Task<EmployeeDto> Create(CreateEmployeeDto dto, string username);
+        Task<EmployeeDto> Create(CreateEmployeeDto dto, string username, ClaimsPrincipal user);
         Task<bool> Update(long id, UpdateEmployeeDto dto);
         Task<bool> Delete(long id);
         

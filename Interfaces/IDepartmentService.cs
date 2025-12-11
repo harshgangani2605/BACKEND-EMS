@@ -8,7 +8,7 @@ namespace EmployeeManagement.Api.Interfaces
         Task<PagedResult<DepartmentDto>> GetPaged(int page, int pageSize, string? search, ClaimsPrincipal user);
 
         Task<DepartmentDto?> GetById(long id);
-        Task<DepartmentDto> Create(CreateDepartmentDto dto,string username);
+        Task<DepartmentDto> Create(CreateDepartmentDto dto,string username, ClaimsPrincipal user);
         Task<bool> Update(long id, CreateDepartmentDto dto);
         Task<bool> Delete(long id);
     }

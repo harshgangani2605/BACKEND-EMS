@@ -79,13 +79,24 @@ namespace EmployeeManagement.Api.Services
             };
         }
 
-        public async Task<SkillDto> Create(CreateSkillDto dto, string u)
+        public async Task<SkillDto> Create(CreateSkillDto dto, string u, ClaimsPrincipal user)
         {
-            bool nameExists = await _context.Skills
-                    .AnyAsync(x => x.Name == dto.Name);
+            bool nameExists;
+
+            if (!user.IsInRole("Admin"))
+            {
+                nameExists= await _context.Skills.AnyAsync(x => x.Name == dto.Name && x.CreatedBy == u);
+
+            }
+            else
+            {
+                nameExists= await _context.Skills.AnyAsync(x => x.Name == dto.Name);
+            }
 
             if (nameExists)
-                throw new Exception("Skill name already exists");
+             throw new Exception("Skill name already exists"); 
+          
+
             var skill = new Skill
             {
                 Name = dto.Name,
