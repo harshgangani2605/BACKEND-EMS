@@ -68,7 +68,7 @@ namespace EmployeeManagement.Api.Controllers
                 Items = result
             };
         }
-        [RequirePermission("user.view")]
+       
         [HttpGet("user")]
         public async Task<IActionResult> GetUser([FromQuery] string email)
         {
