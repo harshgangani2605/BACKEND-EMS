@@ -73,35 +73,7 @@ namespace EmployeeManagement.Api.Services
             var roles = await _userManager.GetRolesAsync(user);
             return _jwtService.GenerateToken(user, roles);
         }
-        // CREATE USER (Admin Only)
-        public async Task<UserDto?> CreateUser(CreateUserDto dto)
-        {
-            var exists = await _userManager.FindByEmailAsync(dto.Email);
-            if (exists != null) return null;
-
-            var user = new AppUser
-            {
-                FullName = dto.FullName,
-                Email = dto.Email,
-                UserName = dto.Email
-            };
-
-            var result = await _userManager.CreateAsync(user, dto.Password);
-            if (!result.Succeeded) return null;
-
-            if (!await _roleManager.RoleExistsAsync(dto.Role))
-                await _roleManager.CreateAsync(new AppRole { Name = dto.Role });
-
-            await _userManager.AddToRoleAsync(user, dto.Role);
-
-            return new UserDto
-            {
-                Id = user.Id,
-                FullName = user.FullName,
-                Email = user.Email!,
-                Roles = new List<string> { dto.Role }
-            };
-        }
+    
 
     }
 }

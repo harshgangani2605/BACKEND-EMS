@@ -5,7 +5,6 @@ namespace EmployeeManagement.Api.Interfaces
     {
         Task<string> Login(LoginDto dto);
         Task<string> Register(RegisterDto dto);
-        Task<PagedResult<UserDto>> GetUsersPaged(int page, int pageSize, string? search);
-        Task<UserDto> CreateUser(CreateUserDto dto); // ADD THIS
+ 
     }
 }

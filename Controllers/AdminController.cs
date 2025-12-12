@@ -1,10 +1,8 @@
 ﻿using EmployeeManagement.Api.Attributes;
 using EmployeeManagement.Api.DTOs;
-using EmployeeManagement.Api.Entities;
+using EmployeeManagement.Api.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagement.Api.Controllers
 {
@@ -13,150 +11,67 @@ namespace EmployeeManagement.Api.Controllers
     [Authorize]
     public class AdminController : ControllerBase
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly RoleManager<AppRole> _roleManager;
+        private readonly IAdminService _service;
 
-        public AdminController(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
+        public AdminController(IAdminService service)
         {
-            _userManager = userManager;
-            _roleManager = roleManager;
+            _service = service;
         }
 
+        // ======================= GET PAGED USERS ===============================
         [RequirePermission("user.view")]
         [HttpGet("users")]
-        public async Task<PagedResult<UserDto>> GetUsersPaged(int page = 1, int pageSize = 10, string? search = null)
+        public async Task<IActionResult> GetUsersPaged(int page = 1, int pageSize = 10, string? search = null)
         {
-            var query = _userManager.Users.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var s = search.ToLower();
-                query = query.Where(u =>
-                    u.Email!.ToLower().Contains(s) ||
-                    u.FullName!.ToLower().Contains(s));
-            }
-
-            var totalItems = await query.CountAsync();
-
-            var users = await query
-                .OrderBy(u => u.FullName)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            var result = new List<UserDto>();
-
-            foreach (var u in users)
-            {
-                var roles = await _userManager.GetRolesAsync(u);
-
-                result.Add(new UserDto
-                {
-                    Id = u.Id,
-                    Email = u.Email!,
-                    FullName = u.FullName ?? "",
-                    Roles = roles.ToList()
-                });
-            }
-
-            return new PagedResult<UserDto>
-            {
-                Page = page,
-                PageSize = pageSize,
-                TotalItems = totalItems,
-                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
-                Items = result
-            };
+            var result = await _service.GetUsersPaged(page, pageSize, search);
+            return Ok(result);
         }
-       
+
+        // ======================= GET SINGLE USER ===============================
         [HttpGet("user")]
         public async Task<IActionResult> GetUser([FromQuery] string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
+            var result = await _service.GetUser(email);
+            if (result == null)
                 return NotFound("User not found");
-
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var result = new UserDto
-            {
-                Id = user.Id,
-                Email = user.Email!,
-                FullName = user.FullName ?? "",
-                Roles = roles.ToList()
-            };
 
             return Ok(result);
         }
 
+        // ======================= CREATE USER ===============================
         [RequirePermission("user.create")]
         [HttpPost("create-user")]
         public async Task<IActionResult> CreateUser(RegisterDto dto)
         {
-            var exists = await _userManager.FindByEmailAsync(dto.Email);
-            if (exists != null)
-                return BadRequest(new { message = "User already exists" });
+            var error = await _service.CreateUser(dto);
+            if (error != null)
+                return BadRequest(error);
 
-            var user = new AppUser
-            {
-                FullName = dto.FullName,
-                Email = dto.Email,
-                UserName = dto.Email
-            };
-
-            var result = await _userManager.CreateAsync(user, dto.Password);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            // Assign role from dto OR default User role
-            var role = string.IsNullOrWhiteSpace(dto.Role) ? "User" : dto.Role;
-
-            if (!await _roleManager.RoleExistsAsync(role))
-                await _roleManager.CreateAsync(new AppRole { Name = role });
-
-            await _userManager.AddToRoleAsync(user, role);
-
-            return Ok(new { message = "create succesfully" });
+            return Ok(new { message = "created successfully" });
         }
+
+        // ======================= CHANGE ROLE ===============================
         [RequirePermission("user.edit")]
         [HttpPost("change-role")]
         public async Task<IActionResult> ChangeRole(ChangeUserRoleDto dto)
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user == null)
-                return NotFound("User not found");
+            var error = await _service.ChangeRole(dto);
+            if (error != null)
+                return BadRequest(error);
 
-            if (!await _roleManager.RoleExistsAsync(dto.Role))
-                return BadRequest("Role does not exist");
-
-            // Remove old roles
-            var oldRoles = await _userManager.GetRolesAsync(user);
-            await _userManager.RemoveFromRolesAsync(user, oldRoles);
-
-            // Add new role
-            var result = await _userManager.AddToRoleAsync(user, dto.Role);
-
-            if (result.Succeeded)
-                return StatusCode(500, "Failed to update role");
-
-            return Ok(new { message = "updated sucessfully" });
+            return Ok(new { message = "updated successfully" });
         }
 
+        // ======================= DELETE USER ===============================
         [RequirePermission("user.delete")]
         [HttpDelete("delete-user")]
         public async Task<IActionResult> DeleteUser([FromQuery] string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-                return NotFound("User not found");
+            var error = await _service.DeleteUser(email);
+            if (error != null)
+                return BadRequest(error);
 
-            var result = await _userManager.DeleteAsync(user);
-
-            if (!result.Succeeded)
-                return StatusCode(500, "Delete failed");
-
-            return Ok(new { message = "deleted  sucessfully" });
+            return Ok(new { message = "deleted successfully" });
         }
     }
 }
