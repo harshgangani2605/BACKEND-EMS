@@ -136,6 +136,8 @@ namespace EmployeeManagement.Api.Services
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
                 return "User not found";
+            if(user.Email == "admin@ems.com")
+                return "Cannot delete default admin user";
 
             var result = await _userManager.DeleteAsync(user);
 
