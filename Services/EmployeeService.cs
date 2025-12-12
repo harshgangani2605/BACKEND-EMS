@@ -17,12 +17,43 @@ namespace EmployeeManagement.Api.Services
         }
 
         // ---------------------- GET ALL ----------------------
-        public async Task<List<EmployeeDto>> GetAll()
+        public async Task<Interfaces.PagedResult<EmployeeDto>> GetPaged(
+        int page,
+        int pageSize,
+        string? search,
+        ClaimsPrincipal user)
         {
-            return await _context.Employees
+            var query = _context.Employees
                 .Include(e => e.Department)
                 .Include(e => e.EmployeeSkills)
                     .ThenInclude(es => es.Skill)
+                .AsQueryable();
+
+            // ROLE-BASED FILTER
+            if (!user.IsInRole("Admin"))
+            {
+                var currentUser = user.Identity?.Name;
+                query = query.Where(x => x.CreatedBy == currentUser);
+            }
+
+            // SEARCH FILTER
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.ToLower();
+                query = query.Where(e =>
+                    e.FullName.ToLower().Contains(s) ||
+                    e.Email.ToLower().Contains(s)
+                );
+            }
+
+            // TOTAL COUNT
+            var totalItems = await query.CountAsync();
+
+            // PAGINATION + PROJECTION
+            var items = await query
+                .OrderBy(e => e.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(e => new EmployeeDto
                 {
                     Id = e.Id,
@@ -32,16 +63,28 @@ namespace EmployeeManagement.Api.Services
                     JoinedOn = e.JoinedOn,
                     DepartmentId = e.DepartmentId,
                     DepartmentName = e.Department.Name,
-                    SkillIds = e.EmployeeSkills.Select(s => s.SkillId).ToList(),
-                    Skills = e.EmployeeSkills.Select(s => s.Skill.Name).ToList(),
-                    CreatedBy = e.CreatedBy,
-
+                    SkillIds = e.EmployeeSkills.Select(x => x.SkillId).ToList(),
+                    Skills = e.EmployeeSkills.Select(x => x.Skill.Name).ToList(),
+                    CreatedBy = user.IsInRole("Admin") ? e.CreatedBy : null
                 })
                 .ToListAsync();
+
+            // RETURN PAGED RESULT
+            return new Interfaces.PagedResult<EmployeeDto>
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                Items = items
+            };
         }
 
+
+
+
+
         // ---------------------- PAGINATION + SEARCH ----------------------
-       
+
 
         // ---------------------- GET BY ID ----------------------
         public async Task<EmployeeDto?> GetById(long id)

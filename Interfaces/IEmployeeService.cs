@@ -5,7 +5,8 @@ namespace EmployeeManagement.Api.Interfaces
 {
     public interface IEmployeeService
     {
-        Task<List<EmployeeDto>> GetAll();
+ 
+        Task<PagedResult<EmployeeDto>> GetPaged(int page, int pageSize, string? search, ClaimsPrincipal user);
         Task<EmployeeDto?> GetById(long id);
 
         Task<EmployeeDto> Create(CreateEmployeeDto dto, string username, ClaimsPrincipal user);
