@@ -29,11 +29,7 @@ namespace EmployeeManagement.Api.Services
         public async Task<Interfaces.PagedResult<SkillDto>> GetPaged(int page, int pageSize, string? search, ClaimsPrincipal user)
         {
             var query = _context.Skills.AsQueryable();
-            if (!user.IsInRole("Admin"))
-            {
-                var currentUser = user.Identity?.Name;
-                query = query.Where(x => x.CreatedBy == currentUser);
-            }
+           
             // SEARCH
             if (!string.IsNullOrWhiteSpace(search))
             {
