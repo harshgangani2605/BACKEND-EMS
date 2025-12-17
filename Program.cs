@@ -88,6 +88,9 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+
 
 // ------------------------------
 // MVC
@@ -193,8 +196,11 @@ async Task CreateDefaultAdmin(WebApplication app)
         "department.view", "department.create", "department.edit", "department.delete",
         "skill.view", "skill.create", "skill.edit", "skill.delete",
         "user.view", "user.create", "user.edit", "user.delete",
-        "role.view", "role.create", "role.manage", "role.delete"
+        "role.view", "role.create", "role.manage", "role.delete",
+        "project.view","project.create","project.edit","project.delete",
+        "task.view","task.create","task.edit","task.delete","salary"
     };
+
 
     foreach (var perm in permissionList)
     {
