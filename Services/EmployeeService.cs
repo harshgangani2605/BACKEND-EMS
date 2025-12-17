@@ -30,11 +30,7 @@ namespace EmployeeManagement.Api.Services
                 .AsQueryable();
 
             // ROLE-BASED FILTER
-            if (!user.IsInRole("Admin"))
-            {
-                var currentUser = user.Identity?.Name;
-                query = query.Where(x => x.CreatedBy == currentUser);
-            }
+       
 
             // SEARCH FILTER
             if (!string.IsNullOrWhiteSpace(search))
