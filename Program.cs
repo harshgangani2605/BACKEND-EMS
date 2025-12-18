@@ -90,7 +90,7 @@ builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
-
+builder.Services.AddScoped<ILeaveService, LeaveService>();
 
 // ------------------------------
 // MVC

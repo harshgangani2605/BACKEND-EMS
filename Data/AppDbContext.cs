@@ -19,6 +19,7 @@ namespace EmployeeManagement.Api.Data
         public DbSet<AppUser> AppUsers { get; set; } = null!;
         public DbSet<Project> Projects { get; set; }
         public DbSet<TaskItem> Tasks { get; set; }
+        public DbSet<LeaveRequest> LeaveRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
