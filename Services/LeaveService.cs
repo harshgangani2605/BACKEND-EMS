@@ -94,7 +94,8 @@ namespace EmployeeManagement.Api.Services
                     LeaveType = l.LeaveType,
                     FromDate = l.FromDate,
                     ToDate = l.ToDate,
-                    Status = l.Status
+                    Status = l.Status,
+                    Reason = l.Reason
                 })
                 .FirstOrDefaultAsync();
         }

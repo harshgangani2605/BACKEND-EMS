@@ -13,6 +13,7 @@ namespace EmployeeManagement.Api.DTOs
         public DateTime ToDate { get; set; }
 
         public string Status { get; set; } = null!;
-        
+        public string? Reason { get; set; }
+
     }
 }
