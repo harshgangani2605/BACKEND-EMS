@@ -44,11 +44,28 @@ namespace EmployeeManagement.Api.Services
         // =========================
         // USER: SEE OWN LEAVES
         // =========================
-        public async Task<List<LeaveListDto>> GetMyLeavesAsync(long userId)
+        public async Task<Interfaces.PagedResult<LeaveListDto>> GetMyLeavesPagedAsync(
+    long userId, int page, int pageSize, string? search)
         {
-            return await _context.LeaveRequests
+            var query = _context.LeaveRequests
                 .Where(l => l.UserId == userId)
+                .AsQueryable();
+
+            // 🔍 SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+                query = query.Where(l =>
+                    l.LeaveType.Contains(search) ||
+                    l.Status.Contains(search));
+            }
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
                 .OrderByDescending(l => l.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(l => new LeaveListDto
                 {
                     Id = l.Id,
@@ -59,15 +76,41 @@ namespace EmployeeManagement.Api.Services
                     Status = l.Status
                 })
                 .ToListAsync();
+
+            return new Interfaces.PagedResult<LeaveListDto>
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                Items = items
+            };
         }
+
 
         // =========================
         // ADMIN / HR: SEE ALL
         // =========================
-        public async Task<List<LeaveListDto>> GetAllLeavesAsync()
+        public async Task<Interfaces.PagedResult<LeaveListDto>> GetAllLeavesPagedAsync(
+    int page, int pageSize, string? search)
         {
-            return await _context.LeaveRequests
+            var query = _context.LeaveRequests.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+                query = query.Where(l =>
+                    l.LeaveType.Contains(search) ||
+                    l.UserName.Contains(search) ||
+                    l.Status.Contains(search));
+            }
+
+            var totalItems = await query.CountAsync();
+
+            var items = await query
                 .OrderByDescending(l => l.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(l => new LeaveListDto
                 {
                     Id = l.Id,
@@ -78,6 +121,15 @@ namespace EmployeeManagement.Api.Services
                     Status = l.Status
                 })
                 .ToListAsync();
+
+            return new Interfaces.PagedResult<LeaveListDto>
+            {
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                Items = items
+            };
         }
 
         // =========================

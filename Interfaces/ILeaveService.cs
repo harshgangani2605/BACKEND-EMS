@@ -6,9 +6,13 @@ namespace EmployeeManagement.Api.Interfaces
     {
         Task ApplyLeaveAsync(ApplyLeaveDto dto,string user);
 
-        Task<List<LeaveListDto>> GetMyLeavesAsync(long userId);
+        Task<PagedResult<LeaveListDto>> GetMyLeavesPagedAsync(
+        long userId, int page, int pageSize, string? search);
 
-        Task<List<LeaveListDto>> GetAllLeavesAsync();
+
+        Task<PagedResult<LeaveListDto>> GetAllLeavesPagedAsync(
+         int page, int pageSize, string? search);
+
         Task<LeaveListDto?> GetByIdAsync(long id);
         Task UpdateStatusAsync(long id, string status, string actionBy);
         Task<List<LeaveListDto>> GetPendingLeavesAsync();

@@ -43,28 +43,36 @@ namespace EmployeeManagement.Api.Controllers
         // =========================
         [HttpGet("my")]
         [RequirePermission("leave.view")]
-        public async Task<IActionResult> GetMyLeaves()
+        public async Task<IActionResult> GetMyLeavesPaged(
+            int page = 1,
+            int pageSize = 10,
+            string? search = null)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             if (string.IsNullOrEmpty(userIdClaim))
                 return Unauthorized();
 
             long userId = long.Parse(userIdClaim);
 
-            var leaves = await _service.GetMyLeavesAsync(userId);
-            return Ok(leaves);
-        }
+            var result = await _service.GetMyLeavesPagedAsync(
+                userId, page, pageSize, search);
 
+            return Ok(result);
+        }
         // =========================
         // ADMIN / HR: SEE ALL LEAVES
         // =========================
         [HttpGet("all")]
         [RequirePermission("leave.view.all")]
-        public async Task<IActionResult> GetAllLeaves()
+        public async Task<IActionResult> GetAllLeavesPaged(
+                int page = 1,
+                int pageSize = 10,
+                string? search = null)
         {
-            var leaves = await _service.GetAllLeavesAsync();
-            return Ok(leaves);
+            var result = await _service.GetAllLeavesPagedAsync(
+                page, pageSize, search);
+
+            return Ok(result);
         }
 
         // =========================
